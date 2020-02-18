@@ -51,67 +51,69 @@ app.get('/sum', (req, res) => {
         }
     });
 
-    // app.get('/cipher', (req, res) => {
-    //     const {text, shift} = req.query;
 
 
-    //     if (!text || !shift) {
-    //         return res
-    //         .status(400)
-    //         .send('text and shift required');
-    //     }
-    // }
 
-
-    // // app.get('/cipher', (req, res) => {
-    // //     const {text, shift} = req.query;
-
-
-    // //     if (!text) {
-    // //        return res
-    // //         .status(400)
-    // //         .send('text and shift required');
-    // //     }
-    // // })
-
-    // const numShift = parseFloat(shift);
-
-    // if(Number.isNaN(numShift)) {
-    //     return res
-    //     .status(400)
-    //     .send('shift must be a number, not a letter');
-    // }
-
-    // const base = 'A'.charCodeAt(0);
 
     
-    // const cipher = text
-    // .ToUpperCase()
-    // .split('')
-    // .map(char => {
-    //     const code = char.charCodeAt(0);
+    app.get('/cipher', (req, res) => {
+        const {text, shift} = req.query;
+
+        if(!text) {
+            return res
+                .status(400)
+                .send('text is required');
+            }
+
+        if (!shift) {
+            return res
+            .status(400)
+            .send('shift is required');
+
+        }
+
+    const numShift = parseFloat(shift);
+
+    if(Number.isNaN(numShift)) {
+
+        return res
+            .status(400)
+            .send('shift must be a number, not a letter');
+    }
+
+    const base = 'A'.charCodeAt(0);
+
+    
+    const cipher = text
+        .toUpperCase()
+        .split('')
+        .map(char => {
+            const code = char.charCodeAt(0);
 
 
-    //     if(code < base || code  > (base +26)) {
-    //         return char;
-    //     }
+        if(code < base || code  > (base +26)) {
+            return char;
+        }
 
-    //     let diff = code - base;
-    //     diff = diff + numShift;
+        let diff = code - base;
+        diff = diff + numShift;
 
-    //     diff = diff % 26;
+        diff = diff % 26;
 
 
-    //     const shiftedChar = String.fromCharCode(base + diff);
-    //     return shiftedChar;
-    // })
+        const shiftedChar = String.fromCharCode(base + diff);
+        return shiftedChar;
+    })
 
-    //     .join('');
+        .join('');
 
-    // res
-    // .status(200)
-    // .send(cipher);
+    res
+    .status(200)
+    .send(cipher);
+    });
 
+
+    
     app.get('/apps', (req, res) => {
         const { genre ='', sort} = req.query;
         let results = array;
@@ -151,6 +153,78 @@ app.get('/sum', (req, res) => {
         .json(results);
     });
 
+
+
+
+    app.get('/lotto', (req, res) => {
+        const { numbers } = req.query;
+        if (!numbers) {
+            return res
+                .status(400)
+                .send('6 numbers required')
+        }
+        if (!Array.isArray(numbers)) {
+            return res 
+                .status(400)
+                .send('numbers must be in array')
+        } 
+        const chosen = numbers
+            .map(num => parseInt(num))
+            .filter (num => !Number.isNaN(num) && (num >= 1 && num <= 20));
+        
+        if(chosen.length != 6) {
+            return res
+                .status(400)
+                .send('Must be 6 numbers between 1 and 20')
+        } 
+        const storedNumbers = Array(20).fill(1).map((_, i) => i + 1);
+
+        const winningNumbers = [];
+        for(let i = 0; i < 6; i++){
+            const ran = Math.floor(Math.random() * storedNumbers.length);
+            winningNumbers.push(storedNumbers[ran]);
+            storedNumbers.splice(ran, 1);
+        }
+
+        let diff = winningNumbers.filter(n => !chosen.includes(n));
+
+        let responseText;
+
+        switch(diff.length){
+            case 0:
+
+            responseText = 'Wow I won the powerball, woohoo!';
+
+            break;
+
+            case 1:
+                responseText = 'Wow you won $100!'
+            break;
+
+            case 2:
+                responseText = 'Congrats, FREE TICKET!';
+
+                break;
+
+            default:
+                responseText = 'Loser!';
+            
+        }
+
+            res.json({
+                chosen,
+                winningNumbers,
+                diff,
+                responseText
+            });
+
+            res.send(responseText);
+        });
+
+
+
+
     app.listen(8080, () => {
         console.log('listening on 8080');
-    })
+    });
+
